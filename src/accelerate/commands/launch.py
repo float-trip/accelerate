@@ -871,7 +871,23 @@ def _validate_launch_command(args):
                         setattr(args, k, defaults.ipex_config[k])
                     continue
 
-                # Those args are handled separately
+
+                # Check for manually setting `num_processes`
+                if name == "num_processes" and getattr(args, "num_processes", None) is not None:
+                    if attr != args.num_processes:
+                        if args.num_processes > 1 and not args.multi_gpu:
+                            raise ValueError(
+                                "Tried to override the config file's `num_processes` value greater than one, but accelerate is not configured for "
+                                "multi-GPU. Please manually override the config file instead."
+                            )
+                        elif args.num_processes == 1 and args.multi_gpu:
+                            raise ValueError(
+                                "Tried to override the config file's `num_processes` value to one, but accelerate is configured for "
+                                "multi-GPU. Please manually override the config file instead."
+                            )
+                        logger.warning(f'Overriding the default value of `num_processes` ({attr}) with {args.num_processes}')
+                        defaults.num_processes = args.num_processes
+                        
                 if (
                     name not in ["compute_environment", "mixed_precision", "distributed_type"]
                     and getattr(args, name, None) is None
