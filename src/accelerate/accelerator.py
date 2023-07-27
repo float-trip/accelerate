@@ -1357,8 +1357,11 @@ class Accelerator:
         if self.native_amp:
             model._original_forward = model.forward
             model_forward_func = model.forward.__func__ if hasattr(model.forward, "__func__") else model.forward
-            autocast_context = get_mixed_precision_context_manager(self.native_amp, self.autocast_handler)
-            new_forward = autocast_context(model_forward_func)
+            if self.mixed_precision == "fp16" or (
+                self.mixed_precision == "bf16" and self.distributed_type != DistributedType.TPU
+            ):
+                autocast_context = get_mixed_precision_context_manager(self.native_amp, self.autocast_handler)
+                new_forward = autocast_context(model_forward_func)
             if hasattr(model.forward, "__func__"):
                 model.forward = MethodType(new_forward, model)
                 model.forward = MethodType(convert_outputs_to_fp32(model.forward.__func__), model)
