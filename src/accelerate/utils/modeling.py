@@ -1435,6 +1435,6 @@ def get_mixed_precision_context_manager(native_amp: bool = False, autocast_kwarg
         ]:
             return torch.autocast(device_type=state.device.type, dtype=torch.bfloat16, **autocast_kwargs)
         else:
-            return contextlib.nullcontext()
+            return contextlib.nullcontext
     else:
-        return contextlib.nullcontext()
+        return contextlib.nullcontext
